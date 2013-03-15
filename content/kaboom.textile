@@ -1,0 +1,56 @@
+h1. KaBOOM!?
+
+h1. About KaBOOM!
+
+* National Non-Profit based in DC
+* "A great place to play within walking distance of every child"
+* ~ 100 person staff
+* Purple and Orange
+
+h1. About KaBOOM!'s engineering department
+
+* Six-person staff
+  - Three full-stack engineers
+  - Two front-end engineers
+  - One product manager
+* Our core technologies to date
+  - Languages: Ruby, Rails, jQuery
+  - Relational DB: MySQL (previously), PostgreSQL (current)
+  - Organization/Product Management: Trello
+  - Other data stores/caching: Redis, Memcached, Sphinx (Previously)
+* Mapping And DIY
+* Plenty of clutter/technical debt over the years
+
+h1. You don't believe me?
+
+:code code/wtf.rb[class=code-tiny]
+
+h1. The last few months...
+
+* Recruit new team members
+* Release a mobile-browser presentation layer of our mapping product
+* Revamp and migrate our entire infrastructure/architecture
+
+h1. Recruit new team members
+
+* Time-consuming
+* Exhausting
+* You still have the same amount of work left to do
+* Plus our domain-specific hurdles of recruiting
+
+h1. Our recruiting process
+
+* Our requirements
+  - Everyone on the team must pair with the candidate
+  - No one on the team should have valid reservations with the candidate
+  - We must lose as little productivity as humanly possible
+
+* We use Trello to manage the entire hiring process
+
+* One 45-minute phone call with me (<= 45 minutes)
+* One in-person session
+  - We play planning poker (<= 30 minutes)
+  - We each spend 30 minutes pairing with the candidate on the selected tasks (== 30 minutes)
+  - We jot our comments after we pair (<= 5 minutes)
+  - The candidate and I sit down and I get their thoughts on the day and answer any questions they have (<= 30 minutes)
+  - Discuss and decide (<= 20 minutes)

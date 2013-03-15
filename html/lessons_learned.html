@@ -1,0 +1,305 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>A Reflection On Progress</title>
+<!-- metadata -->
+<meta name="generator" content="S5" />
+<meta name="version" content="S5 1.1" />
+<meta name="presdate" content="March 12, 2013" />
+<meta name="author" content="Hassan Shahid" />
+<meta name="company" content="KaBOOM!" />
+<!-- configuration parameters -->
+<meta name="defaultView" content="slideshow" />
+<meta name="controlVis" content="hidden" />
+<!-- style sheet links -->
+<link rel="stylesheet" href="../assets/ui/default/slides.css" type="text/css" media="projection" id="slideProj" />
+<link rel="stylesheet" href="../assets/ui/default/outline.css" type="text/css" media="screen" id="outlineStyle" />
+<link rel="stylesheet" href="../assets/stylesheets/print.css" type="text/css" media="print" id="slidePrint" />
+<link rel="stylesheet" href="../assets/ui/default/opera.css" type="text/css" media="projection" id="operaFix" />
+<link rel="stylesheet" href="../assets/stylesheets/pressie.css" type="text/css" />
+
+<!-- S5 JS -->
+<script src="../assets/ui/default/slides.js" type="text/javascript"></script>
+
+<!-- Syntax Highlighter -->
+<link rel="stylesheet"  href="../assets/dp.SyntaxHighlighter/Styles/SyntaxHighlighter.css"></link>
+
+</head>
+<body>
+
+<div class="layout">
+<div id="controls"><!-- DO NOT EDIT --></div>
+<div id="currentSlide"><!-- DO NOT EDIT --></div>
+<div id="header"></div>
+<div id="footer">
+<h2>Copyright © 2013 Hassan Shahid</h2>
+</div>
+
+</div>
+
+
+<div class="presentation">
+  
+<div class="slide"><h1>Lessons Learned</h1>
+</div>
+<div class="slide"><h1>ActiveRecord, wtf?</h1>
+<ul>
+	<li>Schemas are not really supported (we&#8217;ll get back to this in a minute)<br />
+  &#8211; Chicken or the egg problem</li>
+</ul>
+<ul>
+	<li>Adapters return different result types unnecessarily</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">rows = ActiveRecord::Base.connection.execute(
+  'SELECT id FROM users LIMIT 1'
+)
+rows.each do |row|
+  puts "#{row}, #{row.class}"
+end
+MySQL: -&gt; 1, Array
+Postgres: -&gt; {"id" =&gt; 1}, Hash
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/different_results.rb">code/different_results.rb</a></div></p>
+</div>
+<div class="slide"><h1>What&#8217;s wrong with this?</h1>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">SCHEMA = 'custom_schema'
+
+if !ActiveRecord::Base.connection.schema_exists?(SCHEMA)
+  ActiveRecord::Base.connection.execute("CREATE SCHEMA #{SCHEMA}")
+end
+
+ActiveRecord::Base.connection.execute(
+  "SET search_path = #{SCHEMA},public;"
+)
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/schema_initializer.rb">code/schema_initializer.rb</a></div></p>
+</div>
+<div class="slide"><h1>Managing Web Server rewrites</h1>
+<ul>
+	<li>Where the hell do you do that?</li>
+	<li>App, unfortunately</li>
+	<li>Reasonable solution: Rack::Rewrite Gem (https://github.com/jtrupiano/rack-rewrite)</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">config.middleware.insert_before(Rack::Lock, Rack::Rewrite) do
+  rewrite   '/wiki/John_Trupiano',  '/john'
+  r301      '/wiki/Yair_Flicker',   '/yair'
+  r302      '/wiki/Greg_Jastrab',   '/greg'
+  r301      %r{/wiki/(\w+)_\w+},    '/$1'
+end
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/rack_rewrite.rb">code/rack_rewrite.rb</a></div></p>
+</div>
+<div class="slide"><h1>Static websites on Heroku?</h1>
+<ul>
+	<li>Rack::Static.  Done.</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">use Rack::Static,
+  :urls =&gt; ['/images', '/js/','/css', '/assets'],
+  :root =&gt; 'public'
+
+map '/index.html' do
+  run lambda { |env|
+    [   
+      200,
+      {   
+        'Content-Type' =&gt; 'text/html'
+      },  
+      File.open('public/index.html', File::RDONLY)
+    ]   
+  }
+end
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/rack_static.rb">code/rack_static.rb</a></div></p>
+</div>
+<div class="slide"><h1>PG_DUMP/Earthdistance, wtf?</h1>
+<ul>
+	<li>Earthdistance was written to be installed in the public schema</li>
+	<li>Earthdistance was configured to only work if the public schema is in the search path</li>
+	<li>Creating an index on a table using Earthdistance and running pg_dump DOESN&#8217;T <span class="caps">WORK</span>!!!</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">CREATE INDEX earthdistance_lat_lng_idx ON map.playspaces USING gist(LL_to_earth(lat,lng));</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>Postgres 9.2, wtf?</h1>
+<ul>
+	<li>Made a really (stupid) unnecessary breaking change.<br />
+- These work in &lt;= 9.1</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">CREATE LANGUAGE 'PLPGPSQL';
+CREATE LANGUAGE PLPGSQL;
+LANGUAGE 'SQL' IMMUTABLE;
+LANGUAGE SQL STABLE;</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<p>- Only these work in &gt;= 9.2</p>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">CREATE LANGUAGE PLPGSQL;
+LANGUAGE PLPGSQL VOLATILE;</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>MySQL, wtf?</h1>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">users = User.where('city = "Rockville"')</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">mysql&gt; CREATE TABLE abc (
+        id INTEGER,
+        name VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+ERROR 1293 (HY000): Incorrect table definition; there can be only
+one TIMESTAMP column with CURRENT_TIMESTAMP in
+DEFAULT or ON UPDATE clause</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>Pretty cool way of ordering with sets</h1>
+<ul>
+	<li>MySQL has a seemingly useful feature called FIND_IN_SET</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">SELECT * FROM badges ORDER BY FIND_IN_SET(id, '7,2,3');</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<ul>
+	<li>Postgres doesn&#8217;t have this, initially looked at writing a function to replicate, then figured out that this is a totally useless function (at least for this purpose)</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">SELECT * FROM badges ORDER BY id IN (7, 2, 3);</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>Heroku Postgres, wtf?</h1>
+<ul>
+	<li>9.2 is available on Heroku, but only as a devel-upgrade</li>
+	<li>The only way to upgrade an add-on is if it&#8217;s attached to an app</li>
+	<li>Starting off at the logical postgres.heroku.com to spin up a DB is wrong</li>
+	<li>DB instances spun up through postgres.heroku.com aren&#8217;t considered apps, therefore not capable of upgrade</li>
+	<li>Using pgbackups also doesn&#8217;t work as it&#8217;s looking for an app-specific DATABASE_URL</li>
+	<li>The only way to do this if you have multiple apps is to add the postgres addon to the first app you create on Heroku, then upgrade that, and then use that DATABASE_URL as the DATABASE_URL for every other app.</li>
+</ul>
+</div>
+<div class="slide"><h1>Heroku <span class="caps">SSL</span>, wtf?</h1>
+<ul>
+	<li>The <span class="caps">SSL</span> add-on is $20/month &#8230; per app.</li>
+	<li>I have a wildcard-<span class="caps">SSL</span>, Heroku.  What should I do?</li>
+	<li>If you&#8217;re in the predicament (many apps, one wildcard cert), just get a cheap instance from any provider (Amazon,Linode,Rackspace), set up Nginx with the wildcard cert, and reverse-proxy to Heroku endpoints.  Hell, get two.</li>
+</ul>
+</div>
+<div class="slide"><h1>Heroku app names, wtf?</h1>
+<ul>
+	<li>If you plan on creating more than one app on Heroku, for the love of god, please name them something useful</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">new-host-4:~ hassan$ heroku apps
+=== My Apps
+ancient-beach-8895
+damp-sierra-4743
+guarded-ocean-5430
+murmuring-taiga-5177
+quiet-dawn-4309
+rocky-sea-8976
+safe-tor-4310
+salty-temple-9045
+shielded-savannah-5753
+stormy-atoll-5345
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/heroku_apps.sh">code/heroku_apps.sh</a></div></p>
+</div>
+<div class="slide"><h1>Heroku, wtf?</h1>
+<ul>
+	<li>Not really Heroku, it&#8217;s a good enforcement</li>
+	<li>Heroku has a soft request time-out at 30 seconds, and hard time-out at 60 seconds</li>
+	<li>Things like multiple attachment uploads need to be re-evaluated.  We&#8217;re uploading images directly to s3 and using callbacks to process them with Paperclip.</li>
+</ul>
+</div>
+<div class="slide"><h1>Heroku scheduler</h1>
+<ul>
+	<li>Heroku&#8217;s cron replacement</li>
+	<li>Schedule things every 10 minutes, every hour, or every day</li>
+	<li>So how do you schedule something to run every four hours? (Don&#8217;t spend 10 minutes on this like I did)</li>
+</ul>
+</div>
+<div class="slide"><h1><span class="caps">ENV</span> Vars and config files w/ secrets/pw</h1>
+<ul>
+	<li>Heroku works entirely around Environment variables (not a bad thing)</li>
+	<li>Remember, any file you want to Heroku to know about must be committed to the git repo.</li>
+	<li>The better alternative to this is to use Heroku <span class="caps">ENV</span> vars</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">$ heroku config:add RACK_ENV=staging S3_ACCESS_ID=asj9s4b4s8fj
+  S3_SECRET=ainbasf/3ja9sf --remote staging</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>Pushing non-master branches to Heroku</h1>
+<ul>
+	<li>Most likely, you&#8217;re working on a development branch and not merging/pull-requesting it to master. (Please say yes).</li>
+	<li>You&#8217;d think this would work if you want to see your changes deployed to Heroku:</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">$ git push heroku development</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<ul>
+	<li>By now, you know this doesn&#8217;t work.  Try this:</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">$ git push heroku development:master</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<ul>
+	<li>Nothing happened?  <span class="caps">WHY</span> :) ?</li>
+</ul>
+</div>
+<div class="slide"><h1>Final lessons learned, promise.</h1>
+<ul>
+	<li>My two favorite Postgres features I&#8217;ve picked up in the last few months: <span class="caps">WITH</span>, and <span class="caps">LISTEN</span>/<span class="caps">NOTIFY</span></li>
+	<li><span class="caps">WITH</span> allows you to write expressive, chainable <span class="caps">SQL</span></li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">WITH hassan_cards AS (
+  SELECT id, member_ids FROM postrello.cards WHERE
+  ARRAY[(SELECT id FROM postrello.members WHERE full_name = 'Hassan Shahid')] &lt;@ member_ids
+), active_hassan_cards AS (
+  SELECT id, member_ids FROM hassan_cards WHERE active IS TRUE
+) SELECT id, member_id FROM active_hassan_cards WHERE
+  NOT ARRAY[(SELECT id FROM postrello.members WHERE full_name = 'Lukas Eklund')] &lt;@ member_ids;
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/with.sql">code/sql/with.sql</a></div></p>
+<ul>
+	<li><span class="caps">RECURSIVE</span> <span class="caps">FUN</span></li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">WITH RECURSIVE t(n) AS (
+    VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n &lt; 100
+) SELECT sum(n) FROM t;
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/with.sql">code/sql/with.sql</a></div></p>
+</div>
+<div class="slide"><h1><span class="caps">LISTEN</span>/<span class="caps">NOTIFY</span></h1>
+<ul>
+	<li><span class="caps">LISTEN</span>/<span class="caps">NOTIFY</span> is <span class="caps">ASYNC</span> notifier with pub/sub, queue-building capabilities.  The PG gem implements this from libpq.</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">1.9.3-p194 :001 &gt; conn = PG::Connection.connect({dbname: 'postrello_development'})
+=&gt; &lt;PG::Connection:0x007f8f571b6bb8&gt;
+1.9.3-p194 :002 &gt; conn.exec('LISTEN "test_trello"')
+=&gt; &lt;PG::Result:0x007f8f571bfe70&gt;
+1.9.3-p194 :003 &gt; conn.wait_for_notify do |event, pid, extra|
+1.9.3-p194 :004 &gt;   puts "event: #{event}, pid: #{pid}, extra: #{extra}"
+1.9.3-p194 :005?&gt; end
+event: test_trello, pid: 66785, extra: hi
+=&gt; "test_trello"
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/listen.rb">code/listen.rb</a></div></p>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">postrello_development=: NOTIFY "test_trello", 'hi';
+NOTIFY
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/notify.sql">code/sql/notify.sql</a></div></p></div>
+</div>
+
+<!-- Syntax Highlighter -->
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shCore.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCSharp.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushPhp.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushJScript.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushJava.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushVb.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushSql.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushXml.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushDelphi.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushPython.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushRuby.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCss.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCpp.js"></script>
+<script language="javascript">
+dp.SyntaxHighlighter.ClipboardSwf = '/flash/clipboard.swf';
+dp.SyntaxHighlighter.HighlightAll('code');
+</script>
+</body>
+</html>

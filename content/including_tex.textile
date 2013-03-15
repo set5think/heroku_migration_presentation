@@ -1,0 +1,32 @@
+h1. Including TeX math formulas in slides
+
+h1. Including TeX (WebTeX) math formula in slides
+
+Everything line between :inlinetex and :endlinetex is treated as a TeX math formula
+
+*Example:*
+
+:inlinecode
+:inlinewebtex
+\alpha\beta\gamma
+:endinlinewebtex
+:end
+
+*Result:*
+
+:inlinewebtex
+\alpha\beta\gamma
+:end
+
+h1. Ritex and WebTex
+
+WebTeX is an adapation of the TeX math syntax which is designed for web page display.
+
+Ritex is a nice little gem used to generate MathML from from WebTeX.
+
+Ressources:
+* "The WebTeX documentation":http://stuff.mit.edu/afs/athena/software/webeq/currenthome/docs/webtex/toc.html
+* "The Ritex documentation":http://ritex.rubyforge.org/
+
+The flipside is that MathML doesn't always display properly in browsers :-(
+

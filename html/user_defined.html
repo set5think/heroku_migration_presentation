@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>The Codex Presentation System</title>
+<!-- metadata -->
+<meta name="generator" content="S5" />
+<meta name="version" content="S5 1.1" />
+<meta name="presdate" content="March 12, 2013" />
+<meta name="author" content="Dave Thomas" />
+<meta name="company" content="The Pragmatic Programmers, LLC" />
+<!-- configuration parameters -->
+<meta name="defaultView" content="slideshow" />
+<meta name="controlVis" content="hidden" />
+<!-- style sheet links -->
+<link rel="stylesheet" href="../assets/ui/default/slides.css" type="text/css" media="projection" id="slideProj" />
+<link rel="stylesheet" href="../assets/ui/default/outline.css" type="text/css" media="screen" id="outlineStyle" />
+<link rel="stylesheet" href="../assets/stylesheets/print.css" type="text/css" media="print" id="slidePrint" />
+<link rel="stylesheet" href="../assets/ui/default/opera.css" type="text/css" media="projection" id="operaFix" />
+<link rel="stylesheet" href="../assets/stylesheets/pressie.css" type="text/css" />
+
+<!-- S5 JS -->
+<script src="../assets/ui/default/slides.js" type="text/javascript"></script>
+
+<!-- Syntax Highlighter -->
+<link rel="stylesheet"  href="../assets/dp.SyntaxHighlighter/Styles/SyntaxHighlighter.css"></link>
+
+</head>
+<body>
+
+<div class="layout">
+<div id="controls"><!-- DO NOT EDIT --></div>
+<div id="currentSlide"><!-- DO NOT EDIT --></div>
+<div id="header"></div>
+<div id="footer">
+<h2>Copyright © 2008 Dave Thomas</h2>
+</div>
+
+</div>
+
+
+<div class="presentation">
+  
+<div class="slide"><h1>User-defined filters and post processors</h1>
+</div>
+<div class="title slide">
+<h1>User-defined filters</h1>
+<p>Create your own tags</p>
+</div>
+<div class="slide"><h1>User-defined filters</h1>
+<ul>
+	<li>Allow you to create your own <code>filters</code> and <code>tags</code></li>
+	<li>They go in the <code>filters/</code> directory</li>
+	<li>There already is an example filter there</li>
+</ul>
+</div>
+<div class="slide"><h1>Example filter</h1>
+<div style="width: 50%; float: right">
+<div class="code-small">
+<pre name="code" class="ruby:nogutter:nocontrols"># This is _my_ example filter. Define your own ;-)
+
+class TestFilter &lt; Codex::Filter
+  tag :test
+
+  def filter_inline(text,args)
+    text.reverse
+  end
+
+  def filter_single(args)
+    args.reverse
+  end
+end</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/filters/example_filter.rb">filters/example_filter.rb</a></div></p>
+</div>
+<div style="width: 49%">
+<ul>
+	<li>Declare a class which inherits from <code>Codex::Filter</code>
+	<ul>
+		<li>Set the tag you wish to use</li>
+		<li>Implement <code>filter_inline(text,args)</code></li>
+		<li>Implement <code>filter_single(args)</code></li>
+		<li>You can omit filter_single if you just want it to load a file and parse it through filter_inline</li>
+	</ul></li>
+</ul>
+</div>
+<p>It&#8217;s <em>that</em> simple.</p>
+</div>
+<div class="slide"><h1>Using your filter</h1>
+<p>You can now use your tags in your slides:</p>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols"> :inlinetest
+  Reverse this text
+ :endinlinetest</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<p>The result is:</p>
+<p>txet siht esreveR</p>
+</div>
+<div class="title slide">
+<h1>User defined Post Processors</h1>
+<p>Make your own changes to the slides after they are built</p>
+</div>
+<div class="slide"><h1>User defined Post Processors</h1>
+<ul>
+	<li>Allow you to alter the generated <span class="caps">HTML</span> to your content</li>
+	<li>You can use an <span class="caps">HTML</span> parser such as <a href="http://github.com/whymirror/hpricot">Hpricot</a> to make complex modifications or <code>String#gsub</code> to make simple changes</li>
+	<li>They go in the <code>post_processors/</code> directory</li>
+	<li>There are sample Post Processors defined in this directory</li>
+</ul>
+</div>
+<div class="slide"><h1>How to create your own Post Processor</h1>
+<div style="width: 50%; float: right">
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols"># This is a sample post processor. It will convert all 
+# slide titles to upper case.
+# PostProcessors have to subclass Codex::PostProcessor
+# and overwrite the #process. You can then edit the @html 
+# variable, which holds the content of the parsed slides
+# in HTML.
+class UpcaseTitles &lt; Codex::PostProcessor
+  # Uncomment the next line to activate this post processor:
+  # register
+  def process
+    @html = @html.gsub(/(&lt;h1[^&lt;&gt;]*&gt;)([^&lt;&gt;]*)(&lt;\/h1&gt;)/) do |match| 
+      "#{$1}#{$2.upcase}#{$3}"
+    end
+  end
+end</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/post_processors/upcase_titles.rb">post_processors/upcase_titles.rb</a></div></p>
+</div>
+<div style="width: 49%">
+<ul>
+	<li>Declare a class which inherits from <code>Codex::PostProcessor</code></li>
+	<li>Run the <code>register</code> class method on top of the class declaration (commented in the example)</li>
+	<li>Implement <code>process()</code></li>
+	<li>Manipulate the <code>html</code> string variable. Whatever is held in <code>html</code> will be passed on to the slides parser (and maybe to other Post Processors).</li>
+</ul>
+</div>
+</div>
+<div class="slide"><h1>Using the example</h1>
+<ul>
+	<li>Simply uncomment <code># register</code> and regenerate the slides using <code>rake</code> (you may need to delete the old <code>.html</code> files in <code>html/</code>)</li>
+	<li>You will see that all titles are now in <span class="caps">UPCASE</span>.</li>
+	<li>If you want to control the order that Post Processors are applied, name their files incrementally (ex.: <code>01_process_code.rb</code>, <code>02_process_text.rb</code>, etc)</li>
+</ul></div>
+</div>
+
+<!-- Syntax Highlighter -->
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shCore.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCSharp.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushPhp.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushJScript.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushJava.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushVb.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushSql.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushXml.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushDelphi.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushPython.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushRuby.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCss.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCpp.js"></script>
+<script language="javascript">
+dp.SyntaxHighlighter.ClipboardSwf = '/flash/clipboard.swf';
+dp.SyntaxHighlighter.HighlightAll('code');
+</script>
+</body>
+</html>

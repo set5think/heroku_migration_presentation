@@ -1,0 +1,316 @@
+h1. Using technology is easy.  Using any technology well is hard.
+
+h1. Our infrastructure (Pre-migration)
+
+* Inconsistent
+* Tightly-coupled
+* Single points of failure, srsly
+* Redundancy (the bad kind)
+* Virtually no automation
+* Sad database (MySQL)
+* Complex setups
+
+h1. Our infrastructure in imagery (Pre-migration)
+
+* Check out the two images in the /images directory of this presentation
+* One represents our staging env, and one represents our production env
+
+h1. Our wishlist/goals for a new infrastructure
+
+* Move to Postgres
+* Proper staging and production environments
+* Spin up prototype environments on the fly
+* Manage multiple versions of rubies/gems with ease
+* Decouple. 'nuff said
+* Simplify
+* Automation
+* On-demand scaling
+* Cost
+
+h1. Heroku was an easy choice for us
+
+<table style="width:100%; font-size: 24px">
+  <tr>
+    <td></td>
+    <td><strong>Rackspace</strong></td>
+    <td><strong>Linode</strong></td>
+    <td><strong>Heroku</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Postgres</strong></td>
+    <td>yes, requires setup</td>
+    <td>yes, requires setup</td>
+    <td>yes</td>
+  </tr>
+  <tr>
+    <td><strong>Multiple environments</strong></td>
+    <td>requires more VPS and setup</td>
+    <td>requires more VPS and setup</td>
+    <td>Treated like another app</td>
+  </tr>
+  <tr>
+    <td><strong>Version management</strong></td>
+    <td>RVM</td>
+    <td>RVM</td>
+    <td>Gemfile</td>
+  </tr>
+  <tr>
+    <td><strong>Decouple</strong></td>
+    <td>yes, requires setup</td>
+    <td>yes, requires setup</td>
+    <td>a HUGE head start</td>
+  </tr>
+  <tr>
+    <td><strong>Simplify</strong></td>
+    <td>requires setup</td>
+    <td>requires setup</td>
+    <td>a HUGE head start</td>
+  </tr>
+  <tr>
+    <td><strong>Automation</strong></td>
+    <td>requires setup</td>
+    <td>requires setup</td>
+    <td>a HUGE head start</td>
+  </tr>
+  <tr>
+    <td><strong>On-demand scaling</strong></td>
+    <td>requires setup</td>
+    <td>requires setup</td>
+    <td>A HUGE head start</td>
+  </tr>
+  <tr>
+    <td><strong>Cost</strong></td>
+    <td>On the surface, 2nd cheapest</td>
+    <td>On the surface, cheapest</td>
+    <td>On the surface, most expensive</td>
+  </tr>
+</table>
+
+h1. Upfront Disadvantages
+
+* Slightly less control of cost, overall can be more expensive
+* Less administrative control (sudo? what's that?)
+* Read-Only filesystem (a few exceptions to this)
+
+h1. What we migrated
+
+* Six web applications
+* Two APIs
+* Database
+
+h1(slide0). Creating multiple environments on Heroku
+
+:code code/new_environment.sh[create]
+
+h1. Creating multiple environments on Heroku
+
+:code code/new_environment.sh[staging class=code-tiny]
+
+h1. Creating multiple environments on Heroku (cont.)
+
+:code code/new_environment.sh[prod class=code-tiny]
+
+h1. Creating multiple environments on Heroku (cont.)
+
+:code code/new_environment.sh[alias class=code-tiny]
+
+h1(slide0). Postgres
+
+h1.  Why Postgres?
+
+* Free, always will be
+* Feature-rich (Larry Ellison rich)
+* Full transaction support for ALL DDL
+* Extensions
+* PostGIS
+* Data-types (JSON now supported)
+* Languages (heard of PL/V8?)
+* Built-in async streaming replication
+* Highly Extensible
+
+h1. You can even...
+
+* Query MySQL from Postgres:
+
+:code code/sql/create.sql[class=code-tiny]
+
+h1. A couple quick benchmarks
+
+:code code/sql/benchmark.sql[class=code-tiny]
+
+h1. Data migration strategy
+
+* moved from ruby to sql for schema_format
+
+:inlinecode
+config.active_record.schema_format = :sql
+:endinlinecode
+
+* have to use a couple different rake methods
+
+:inlinecode
+rake db:structure:dump /* creates a structure.sql file */
+rake db:structure:load
+:endinlinecode
+
+* Change VARCHAR to TEXT
+
+:code code/regex.sh
+
+* We wanted to store every "database" in logically named schemas
+
+h1. Data migration strategy (cont.)
+
+* We also wanted a shared database between all the apps
+
+:code code/database_url.sh[class=code-tiny]
+
+* In case you didn't know, DATABASE_URL is a concept heavily baked in ActiveRecord
+
+:code code/active_record/railtie.rb[class=code-tiny]
+
+h1. Data migration strategy (cont.)
+
+* Unlike MySQL, Postgres doesn't connect you to a "SCHEMA"
+* database.yml config parameter to set schema path: schema_search_path
+* Problem? ActiveRecord doesn't support URI params on DATABASE_URL, and Heroku doesn't support reading your database.yml file
+* Gem: Heroku_db_env (we had to patch it)
+
+:code code/heroku_db_env.rb[class=code-tiny]
+
+h1. Data migration strategy (cont.)
+
+* Taps gem.  Open-sourced by Heroku a while ago (had to patch it, also had to patch Sequel)
+
+- Run this on the source db server
+
+:code code/taps.sh[server class=code-tiny]
+
+- Run this as a client
+
+:code code/taps.sh[client class=code-tiny]
+
+h1. Quick tip
+
+* On managing crazy incoherent Postgres connection strings
+* Sample database url provided by heroku:
+  - postgres://asjf8hfwasdov:9824nms$02i@ec2-10-139-39-29.compute-1.amazonaws.com:5432/94jnas4n
+* ...
+* Use pgpass files
+
+:inlinecode
+$ echo host:port:dbname:user:pass >> ~/.pgpass && chmod 600 ~/.pgpass
+$ echo "alias pg_heroku='psql -d dbname -h host -U user'"
+>> ~/.bash_profile
+:endinlinecode
+
+h1. Quick word on Heroku PG followers and forks
+
+* Don't scale up your Heroku web workers and run an ab -n 1000 -c 1000 host
+* Heroku postgres gives you 500 concurrent connections
+* Followers give you the ability to create master/slave setups, and hot-standbys
+* Forks give you the ability to clone a snapshot of your DB
+* Octopus gem is a good start to using active-record and master/slave or shard strategies
+
+h1(slide0). Sphinx to Postgres FTS/Earthdistance
+
+h1. Replacing Sphinx with Postgres FTS
+
+* Sphinx is awesome, but when you don't need it, it's overbearing
+* A special version of Sphinx/ThinkingSphinx is available on Heroku (paid add-on)
+* Building the Sphinx indices is a daily task
+* Delta indices are cool, but super annoying
+* Resque + Sphinx is a good way to manage delta indices, but adds complexity
+* Basically, we need cron tasks, resque workers, Redis, Sphinx (on the same machine), and MySQL to use our trivial full-text-search
+* Extending ThinkingSphinx is not fun (and Sphinx queries are not fun to write, especially when they're abstracted by ThinkingSphinx)
+
+h1. Enter Postgres FTS
+
+* Postgres supports full-text-search natively (tsearch2, pgtrm, etc...)
+* supports stemming in multiple dictionaries
+* GiST and GIN index types available for optimizing queries
+* updating indices is on a row-by-row basis using triggers in real-time
+* You can combine your full-text-search with any other SQL querying
+* Pretty awesome performance
+
+h1. Postgres FTS example
+
+:inlinecode
+SELECT *
+FROM table_name
+WHERE ts_vector('english', column_name) @@
+plainto_tsquery('english', 'text search');
+:endinlinecode
+
+h1. Replacing Sphinx spatial querying with Earthdistance
+
+* Earthdistance is a Postgres extension that allows either querying using either a cube type (x, y and z points) or a point type (x and y points), where the earth is assumed to be perfectly spherical.
+* I hope you're not using Sphinx just for spatial queries :)
+
+h1. Examples of earthdistance
+
+* Cube example
+
+:code code/sql/earthdistance.sql[cube class=code-tiny]
+
+* Point example
+
+:code code/sql/earthdistance.sql[point class=code-tiny]
+
+* Sort by distance (KNN)
+
+:code code/sql/earthdistance.sql[knn class=code-tiny]
+
+h1(slide0). Our crazy non-SSO SSO
+
+h1. Our crazy non-SSO SSO
+
+* One of our biggest hurdles
+* RubyCAS Server gem: doesn't work on Read-Only FS
+* Someone forked it and made it work for RO-FS, but it's been unmaintained for ~ 2 years.
+* Why are we even using this?! It doesn't even offer us SSO!
+* Each app now handles its own authentication, and the API was stripped out to still offer password-resets and account creation for backwards and mobile-app compatibility.
+
+h1(slide0). Another horrible thing we had to deal with (Thanks consultants)
+
+h1.  Native mobile apps and asset handling
+
+* Native mobile app had explicit resource URI prefixes hardcoded in iOS and Android code
+* Storing photo uploads on application server.
+- e.g.: href="/tag/v1/api/" + file_name
+* Awesome.
+* Heroku no like writing to application server.
+* Had to migrate all the photos to s3, change their file names in the DB, and then download them from S3 from the application, and pass the resource to the mobile app. :(.
+* Mad props to s3fs
+
+h1(slide0). Cloudfront
+
+h1. Cloudfront
+
+* Don't have access to Nginx/Apache configurations at Heroku
+* Everything has to be done at the application level, meaning dynos are used
+to do things they shouldn't be doing, so Rack::Cache isn't a great solution.
+* A strong solution to serving assets via a CDN.
+* Cloudfront clones your assets, and any new asset that is served that Cloudfront doesn't know about, it makes a request to your app and then caches it from then on.
+* Wrote a simple custom middleware to return 404s on anything that wasn't being served from /assets
+
+h1. Cloudfront middleware code
+
+* set the asset host in your environments/<env>.rb file
+
+:inlinecode
+config.action_controller.asset_host = 'subdomain.cloudfront.net'
+:endinlinecode
+
+* tell application.rb about your middleware
+
+:inlinecode
+config.middleware.use "Kaboom::Cloudblock"
+:endinlinecode
+
+h1. middleware code continued
+
+* middleware code
+
+:code code/cloudblock.rb[class=code-tiny]
+

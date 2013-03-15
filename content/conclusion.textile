@@ -1,0 +1,12 @@
+h1. Summarize this shiz
+
+h1. Summarize this shiz
+
+* The last few months have been extremely productive and eye-opening
+* We focused on how we can be productive in all things we do
+* Heroku has been a great decision for us; it allows us to focus on what we're good at.
+* Even as awesome as Heroku is, there are tons of things you have to watch out for.
+* Postgres is awesome.
+* We're hiring.
+
+h1(slide0). Any questions?

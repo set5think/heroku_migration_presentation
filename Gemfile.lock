@@ -1,0 +1,18 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    RedCloth (4.2.9)
+    activesupport (3.1.11)
+      multi_json (~> 1.0)
+    codex (1.1.2)
+    multi_json (1.6.1)
+    rubigen (1.5.8)
+      activesupport (>= 2.3.5, < 3.2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  RedCloth
+  codex
+  rubigen

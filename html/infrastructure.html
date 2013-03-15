@@ -1,0 +1,586 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>A Reflection On Progress</title>
+<!-- metadata -->
+<meta name="generator" content="S5" />
+<meta name="version" content="S5 1.1" />
+<meta name="presdate" content="March 12, 2013" />
+<meta name="author" content="Hassan Shahid" />
+<meta name="company" content="KaBOOM!" />
+<!-- configuration parameters -->
+<meta name="defaultView" content="slideshow" />
+<meta name="controlVis" content="hidden" />
+<!-- style sheet links -->
+<link rel="stylesheet" href="../assets/ui/default/slides.css" type="text/css" media="projection" id="slideProj" />
+<link rel="stylesheet" href="../assets/ui/default/outline.css" type="text/css" media="screen" id="outlineStyle" />
+<link rel="stylesheet" href="../assets/stylesheets/print.css" type="text/css" media="print" id="slidePrint" />
+<link rel="stylesheet" href="../assets/ui/default/opera.css" type="text/css" media="projection" id="operaFix" />
+<link rel="stylesheet" href="../assets/stylesheets/pressie.css" type="text/css" />
+
+<!-- S5 JS -->
+<script src="../assets/ui/default/slides.js" type="text/javascript"></script>
+
+<!-- Syntax Highlighter -->
+<link rel="stylesheet"  href="../assets/dp.SyntaxHighlighter/Styles/SyntaxHighlighter.css"></link>
+
+</head>
+<body>
+
+<div class="layout">
+<div id="controls"><!-- DO NOT EDIT --></div>
+<div id="currentSlide"><!-- DO NOT EDIT --></div>
+<div id="header"></div>
+<div id="footer">
+<h2>Copyright © 2013 Hassan Shahid</h2>
+</div>
+
+</div>
+
+
+<div class="presentation">
+  
+<div class="slide"><h1>Using technology is easy.  Using any technology well is hard.</h1>
+</div>
+<div class="slide"><h1>Our infrastructure (Pre-migration)</h1>
+<ul>
+	<li>Inconsistent</li>
+	<li>Tightly-coupled</li>
+	<li>Single points of failure, srsly</li>
+	<li>Redundancy (the bad kind)</li>
+	<li>Virtually no automation</li>
+	<li>Sad database (MySQL)</li>
+	<li>Complex setups</li>
+</ul>
+</div>
+<div class="slide"><h1>Our infrastructure in imagery (Pre-migration)</h1>
+<ul>
+	<li>Check out the two images in the /images directory of this presentation</li>
+	<li>One represents our staging env, and one represents our production env</li>
+</ul>
+</div>
+<div class="slide"><h1>Our wishlist/goals for a new infrastructure</h1>
+<ul>
+	<li>Move to Postgres</li>
+	<li>Proper staging and production environments</li>
+	<li>Spin up prototype environments on the fly</li>
+	<li>Manage multiple versions of rubies/gems with ease</li>
+	<li>Decouple. &#8217;nuff said</li>
+	<li>Simplify</li>
+	<li>Automation</li>
+	<li>On-demand scaling</li>
+	<li>Cost</li>
+</ul>
+</div>
+<div class="slide"><h1>Heroku was an easy choice for us</h1>
+<table style="width:100%; font-size: 24px">
+<tr>
+    <td></td>
+    <td><strong>Rackspace</strong></td>
+    <td><strong>Linode</strong></td>
+    <td><strong>Heroku</strong></td>
+</tr>
+<tr>
+    <td><strong>Postgres</strong></td>
+    <td>yes, requires setup</td>
+    <td>yes, requires setup</td>
+    <td>yes</td>
+</tr>
+<tr>
+    <td><strong>Multiple environments</strong></td>
+    <td>requires more <span class="caps">VPS</span> and setup</td>
+    <td>requires more <span class="caps">VPS</span> and setup</td>
+    <td>Treated like another app</td>
+</tr>
+<tr>
+    <td><strong>Version management</strong></td>
+    <td><span class="caps">RVM</span></td>
+    <td><span class="caps">RVM</span></td>
+    <td>Gemfile</td>
+</tr>
+<tr>
+    <td><strong>Decouple</strong></td>
+    <td>yes, requires setup</td>
+    <td>yes, requires setup</td>
+    <td>a <span class="caps">HUGE</span> head start</td>
+</tr>
+<tr>
+    <td><strong>Simplify</strong></td>
+    <td>requires setup</td>
+    <td>requires setup</td>
+    <td>a <span class="caps">HUGE</span> head start</td>
+</tr>
+<tr>
+    <td><strong>Automation</strong></td>
+    <td>requires setup</td>
+    <td>requires setup</td>
+    <td>a <span class="caps">HUGE</span> head start</td>
+</tr>
+<tr>
+    <td><strong>On-demand scaling</strong></td>
+    <td>requires setup</td>
+    <td>requires setup</td>
+    <td>A <span class="caps">HUGE</span> head start</td>
+</tr>
+<tr>
+    <td><strong>Cost</strong></td>
+    <td>On the surface, 2nd cheapest</td>
+    <td>On the surface, cheapest</td>
+    <td>On the surface, most expensive</td>
+</tr>
+</table>
+</div>
+<div class="slide"><h1>Upfront Disadvantages</h1>
+<ul>
+	<li>Slightly less control of cost, overall can be more expensive</li>
+	<li>Less administrative control (sudo? what&#8217;s that?)</li>
+	<li>Read-Only filesystem (a few exceptions to this)</li>
+</ul>
+</div>
+<div class="slide"><h1>What we migrated</h1>
+<ul>
+	<li>Six web applications</li>
+	<li>Two APIs</li>
+	<li>Database</li>
+</ul>
+</div>
+<div class="title slide">
+<h1>Creating multiple environments on Heroku</h1>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">new-host-4:~ tag_api hassan$ heroku create --remote &lt;insert_name_here&gt;
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/new_environment.sh">code/new_environment.sh</a></div></p>
+</div>
+<div class="slide"><h1>Creating multiple environments on Heroku</h1>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">new-host-4:~ tag_api hassan$ heroku create --remote staging
+new-host-4:~ tag_api hassan$ cat .git/config
+[core]
+  repositoryformatversion = 0
+  filemode = true
+  bare = false
+  logallrefupdates = true
+  ignorecase = true
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaboom-org/tag_api
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[remote "staging"]
+  url = git@heroku.com:rocky-sea-8976.git
+  fetch = +refs/heads/*:refs/remotes/staging/*
+[gitflow "branch"]
+  master = master
+  develop = develop
+[gitflow "prefix"]
+  feature = feature/
+  release = release/
+  hotfix = hotfix/
+  support = support/
+  versiontag =
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/new_environment.sh">code/new_environment.sh</a></div></p>
+</div>
+<div class="slide"><h1>Creating multiple environments on Heroku (cont.)</h1>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">new-host-4:~ tag_api hassan$ heroku create --remote production
+new-host-4:~ tag_api hassan$ cat .git/config
+[core]
+  repositoryformatversion = 0
+  filemode = true
+  bare = false
+  logallrefupdates = true
+  ignorecase = true
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaboom-org/tag_api
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[remote "staging"]
+  url = git@heroku.com:rocky-sea-8976.git
+  fetch = +refs/heads/*:refs/remotes/staging/*
+[remote "production"]
+  url = git@heroku.com:dead-wood-3875.git
+  fetch = +refs/heads/*:refs/remotes/production/*
+[gitflow "branch"]
+  master = master
+  develop = develop
+[gitflow "prefix"]
+  feature = feature/
+  release = release/
+  hotfix = hotfix/
+  support = support/
+  versiontag =
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/new_environment.sh">code/new_environment.sh</a></div></p>
+</div>
+<div class="slide"><h1>Creating multiple environments on Heroku (cont.)</h1>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">new-host-4:~ tag_api hassan$ git config heroku.remote staging
+new-host-4:~ tag_api hassan$ cat .git/config
+[core]
+  repositoryformatversion = 0
+  filemode = true
+  bare = false
+  logallrefupdates = true
+  ignorecase = true
+[remote "origin"]
+  fetch = +refs/heads/*:refs/remotes/origin/*
+  url = git@github.com:kaboom-org/tag_api
+[branch "master"]
+  remote = origin
+  merge = refs/heads/master
+[remote "staging"]
+  url = git@heroku.com:rocky-sea-8976.git
+  fetch = +refs/heads/*:refs/remotes/staging/*
+[remote "production"]
+  url = git@heroku.com:dead-wood-3875.git
+  fetch = +refs/heads/*:refs/remotes/production/*
+[heroku]
+  remote = staging
+[gitflow "branch"]
+  master = master
+  develop = develop
+[gitflow "prefix"]
+  feature = feature/
+  release = release/
+  hotfix = hotfix/
+  support = support/
+  versiontag =
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/new_environment.sh">code/new_environment.sh</a></div></p>
+</div>
+<div class="title slide">
+<h1>Postgres</h1>
+</div>
+<div class="slide"><h1>Why Postgres?</h1>
+<ul>
+	<li>Free, always will be</li>
+	<li>Feature-rich (Larry Ellison rich)</li>
+	<li>Full transaction support for <span class="caps">ALL</span> <span class="caps">DDL</span></li>
+	<li>Extensions</li>
+	<li>PostGIS</li>
+	<li>Data-types (<span class="caps">JSON</span> now supported)</li>
+	<li>Languages (heard of PL/V8?)</li>
+	<li>Built-in async streaming replication</li>
+	<li>Highly Extensible</li>
+</ul>
+</div>
+<div class="slide"><h1>You can even&#8230;</h1>
+<ul>
+	<li>Query MySQL from Postgres:</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">hassan=: CREATE SERVER mysql_svr FOREIGN DATA WRAPPER mysql_fdw
+         OPTIONS (address '127.0.0.1', port '3306');
+CREATE SERVER
+Time: 2.180 ms
+hassan=: CREATE FOREIGN TABLE odp_projects (id INTEGER, name TEXT) SERVER mysql_svr OPTIONS
+         (database 'odp_production', query 'SELECT id, name FROM odp_production.projects');
+CREATE FOREIGN TABLE
+Time: 2.823 ms
+hassan=: CREATE USER MAPPING FOR PUBLIC SERVER mysql_svr OPTIONS (username 'hshahid', password 'xxxxxxxxxx');
+CREATE USER MAPPING
+Time: 1.679 ms
+hassan=: EXPLAIN ANALYZE SELECT * FROM odp_projects LIMIT 10;                                                          QUERY PLAN                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=25.00..35.00 rows=10 width=36) (actual time=523.997..524.007 rows=10 loops=1)
+   -&gt;  Foreign Scan on odp_projects  (cost=25.00..11466.00 rows=11441 width=36) (actual time=523.995..524.003 rows=10 loops=1)
+         Remote server startup cost: 25
+         MySQL query: SELECT id, name FROM odp_production.projects
+ Total runtime: 667.406 ms
+(5 rows)
+
+Time: 857.613 ms
+hassan=:
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/create.sql">code/sql/create.sql</a></div></p>
+</div>
+<div class="slide"><h1>A couple quick benchmarks</h1>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">dct83gqfeii39f=&gt; BEGIN;
+dct83gqfeii39f=&gt; EXPLAIN ANALYZE SELECT generate_series(1,1000000,1);
+                                         QUERY PLAN                                          
+---------------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.00 rows=1 width=0) (actual time=0.008..1141.080 rows=1000000 loops=1)
+ Total runtime: 2233.273 ms
+(2 rows)
+dct83gqfeii39f=&gt; EXPLAIN ANALYZE CREATE TABLE abc AS SELECT generate_series(1,1000000,1);
+                                         QUERY PLAN                                          
+                                        ---------------------------------------------------------------------------------------------
+ Result  (cost=0.00..0.00 rows=1 width=0) (actual time=0.012..1577.464 rows=1000000 loops=1)
+ Total runtime: 4458.538 ms
+(2 rows)
+
+Time: 4474.989 ms
+dct83gqfeii39f=&gt; DROP TABLE abc;
+DROP TABLE
+Time: 29.822 ms
+dct83gqfeii39f=&gt; CREATE TABLE abc AS SELECT generate_series(1,1000000,1);
+SELECT 1000000
+Time: 2306.769 ms
+dct83gqfeii39f=&gt; ROLLBACK;
+
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/benchmark.sql">code/sql/benchmark.sql</a></div></p>
+</div>
+<div class="slide"><h1>Data migration strategy</h1>
+<ul>
+	<li>moved from ruby to sql for schema_format</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">config.active_record.schema_format = :sql</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<ul>
+	<li>have to use a couple different rake methods</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">rake db:structure:dump /* creates a structure.sql file */
+rake db:structure:load</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<ul>
+	<li>Change <span class="caps">VARCHAR</span> to <span class="caps">TEXT</span></li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">s/VARCHAR\(?\d*\)?/TEXT/g
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/regex.sh">code/regex.sh</a></div></p>
+<ul>
+	<li>We wanted to store every &#8220;database&#8221; in logically named schemas</li>
+</ul>
+</div>
+<div class="slide"><h1>Data migration strategy (cont.)</h1>
+<ul>
+	<li>We also wanted a shared database between all the apps</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">$ heroku config:add DATABASE_URL=postgres://user:pass@host:port/dbname --remote &lt;remote_name&gt;
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/database_url.sh">code/database_url.sh</a></div></p>
+<ul>
+	<li>In case you didn&#8217;t know, DATABASE_URL is a concept heavily baked in ActiveRecord</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">initializer "active_record.initialize_database" do |app|
+  ActiveSupport.on_load(:active_record) do
+    db_connection_type = "DATABASE_URL"
+    unless ENV['DATABASE_URL']
+      db_connection_type  = "database.yml"
+      self.configurations = app.config.database_configuration
+    end
+    Rails.logger.info "Connecting to database specified by #{db_connection_type}"
+
+    establish_connection
+  end
+end
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/active_record/railtie.rb">code/active_record/railtie.rb</a></div></p>
+</div>
+<div class="slide"><h1>Data migration strategy (cont.)</h1>
+<ul>
+	<li>Unlike MySQL, Postgres doesn&#8217;t connect you to a &#8220;<span class="caps">SCHEMA</span>&#8221;</li>
+	<li>database.yml config parameter to set schema path: schema_search_path</li>
+	<li>Problem? ActiveRecord doesn&#8217;t support <span class="caps">URI</span> params on DATABASE_URL, and Heroku doesn&#8217;t support reading your database.yml file</li>
+	<li>Gem: Heroku_db_env (we had to patch it)</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">class HerokuDbEnvRailtie &lt; Rails::Railtie
+  initializer :initialize_heroku_db_env, {:group =&gt; :default, :before =&gt; "active_record.initialize_database"} do |app|
+    db_config = HerokuDbEnv.build_db_config(app.config.database_configuration)
+
+    ENV['DATABASE_URL'] = nil
+
+    app.config.class_eval do
+      define_method(:database_configuration) { db_config }
+    end
+  end
+end
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/heroku_db_env.rb">code/heroku_db_env.rb</a></div></p>
+</div>
+<div class="slide"><h1>Data migration strategy (cont.)</h1>
+<ul>
+	<li>Taps gem.  Open-sourced by Heroku a while ago (had to patch it, also had to patch Sequel)</li>
+</ul>
+<p>- Run this on the source db server</p>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">$ taps server mysql://root@localhost/dbname?encoding=utf8 tmpuser tmppass
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/taps.sh">code/taps.sh</a></div></p>
+<p>- Run this as a client</p>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">$ taps pull postgres://localhost/dbname?default_schema=schema_name http://tmpuser:tmppass@host:5000 -s schema_name
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/taps.sh">code/taps.sh</a></div></p>
+</div>
+<div class="slide"><h1>Quick tip</h1>
+<ul>
+	<li>On managing crazy incoherent Postgres connection strings</li>
+	<li>Sample database url provided by heroku:<br />
+  &#8211; postgres://asjf8hfwasdov:9824nms$02i@ec2-10-139-39-29.compute-1.amazonaws.com:5432/94jnas4n</li>
+	<li>&#8230;</li>
+	<li>Use pgpass files</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">$ echo host:port:dbname:user:pass &gt;&gt; ~/.pgpass &amp;&amp; chmod 600 ~/.pgpass
+$ echo "alias pg_heroku='psql -d dbname -h host -U user'"
+&gt;&gt; ~/.bash_profile</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>Quick word on Heroku PG followers and forks</h1>
+<ul>
+	<li>Don&#8217;t scale up your Heroku web workers and run an ab -n 1000 -c 1000 host</li>
+	<li>Heroku postgres gives you 500 concurrent connections</li>
+	<li>Followers give you the ability to create master/slave setups, and hot-standbys</li>
+	<li>Forks give you the ability to clone a snapshot of your DB</li>
+	<li>Octopus gem is a good start to using active-record and master/slave or shard strategies</li>
+</ul>
+</div>
+<div class="title slide">
+<h1>Sphinx to Postgres <span class="caps">FTS</span>/Earthdistance</h1>
+</div>
+<div class="slide"><h1>Replacing Sphinx with Postgres <span class="caps">FTS</span></h1>
+<ul>
+	<li>Sphinx is awesome, but when you don&#8217;t need it, it&#8217;s overbearing</li>
+	<li>A special version of Sphinx/ThinkingSphinx is available on Heroku (paid add-on)</li>
+	<li>Building the Sphinx indices is a daily task</li>
+	<li>Delta indices are cool, but super annoying</li>
+	<li>Resque + Sphinx is a good way to manage delta indices, but adds complexity</li>
+	<li>Basically, we need cron tasks, resque workers, Redis, Sphinx (on the same machine), and MySQL to use our trivial full-text-search</li>
+	<li>Extending ThinkingSphinx is not fun (and Sphinx queries are not fun to write, especially when they&#8217;re abstracted by ThinkingSphinx)</li>
+</ul>
+</div>
+<div class="slide"><h1>Enter Postgres <span class="caps">FTS</span></h1>
+<ul>
+	<li>Postgres supports full-text-search natively (tsearch2, pgtrm, etc&#8230;)</li>
+	<li>supports stemming in multiple dictionaries</li>
+	<li>GiST and <span class="caps">GIN</span> index types available for optimizing queries</li>
+	<li>updating indices is on a row-by-row basis using triggers in real-time</li>
+	<li>You can combine your full-text-search with any other <span class="caps">SQL</span> querying</li>
+	<li>Pretty awesome performance</li>
+</ul>
+</div>
+<div class="slide"><h1>Postgres <span class="caps">FTS</span> example</h1>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">SELECT *
+FROM table_name
+WHERE ts_vector('english', column_name) @@
+plainto_tsquery('english', 'text search');</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>Replacing Sphinx spatial querying with Earthdistance</h1>
+<ul>
+	<li>Earthdistance is a Postgres extension that allows either querying using either a cube type (x, y and z points) or a point type (x and y points), where the earth is assumed to be perfectly spherical.</li>
+	<li>I hope you&#8217;re not using Sphinx just for spatial queries :)</li>
+</ul>
+</div>
+<div class="slide"><h1>Examples of earthdistance</h1>
+<ul>
+	<li>Cube example</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">SELECT * FROM table_name
+WHERE earth_box(ll_to_earth(source_lat, source_lng), 5000) --kilometers
+@&gt; ll_to_earth(lat_column, lng_column);
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/earthdistance.sql">code/sql/earthdistance.sql</a></div></p>
+<ul>
+	<li>Point example</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">SELECT * FROM table_name
+WHERE (POINT(source_lat, source_lng) &lt;@&gt; POINT(lat_column, lng_column)) &lt;= 10;
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/earthdistance.sql">code/sql/earthdistance.sql</a></div></p>
+<ul>
+	<li>Sort by distance (<span class="caps">KNN</span>)</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">SELECT * FROM table_name
+WHERE (POINT(source_lat, source_lng) &lt;@&gt; POINT(lat_column, lng_column)) &lt;= 10
+ORDER BY POINT(lat_column, lng_column) &lt;-&gt; POINT(source_lat, source_lng);
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/earthdistance.sql">code/sql/earthdistance.sql</a></div></p>
+</div>
+<div class="title slide">
+<h1>Our crazy non-<span class="caps">SSO</span> <span class="caps">SSO</span></h1>
+</div>
+<div class="slide"><h1>Our crazy non-<span class="caps">SSO</span> <span class="caps">SSO</span></h1>
+<ul>
+	<li>One of our biggest hurdles</li>
+	<li>RubyCAS Server gem: doesn&#8217;t work on Read-Only FS</li>
+	<li>Someone forked it and made it work for RO-FS, but it&#8217;s been unmaintained for ~ 2 years.</li>
+	<li>Why are we even using this?! It doesn&#8217;t even offer us <span class="caps">SSO</span>!</li>
+	<li>Each app now handles its own authentication, and the <span class="caps">API</span> was stripped out to still offer password-resets and account creation for backwards and mobile-app compatibility.</li>
+</ul>
+</div>
+<div class="title slide">
+<h1>Another horrible thing we had to deal with (Thanks consultants)</h1>
+</div>
+<div class="slide"><h1>Native mobile apps and asset handling</h1>
+<ul>
+	<li>Native mobile app had explicit resource <span class="caps">URI</span> prefixes hardcoded in iOS and Android code</li>
+	<li>Storing photo uploads on application server.<br />
+- e.g.: href=&#8220;/tag/v1/api/&#8221; + file_name</li>
+	<li>Awesome.</li>
+	<li>Heroku no like writing to application server.</li>
+	<li>Had to migrate all the photos to s3, change their file names in the DB, and then download them from S3 from the application, and pass the resource to the mobile app. :(.</li>
+	<li>Mad props to s3fs</li>
+</ul>
+</div>
+<div class="title slide">
+<h1>Cloudfront</h1>
+</div>
+<div class="slide"><h1>Cloudfront</h1>
+<ul>
+	<li>Don&#8217;t have access to Nginx/Apache configurations at Heroku</li>
+	<li>Everything has to be done at the application level, meaning dynos are used<br />
+to do things they shouldn&#8217;t be doing, so Rack::Cache isn&#8217;t a great solution.</li>
+	<li>A strong solution to serving assets via a <span class="caps">CDN</span>.</li>
+	<li>Cloudfront clones your assets, and any new asset that is served that Cloudfront doesn&#8217;t know about, it makes a request to your app and then caches it from then on.</li>
+	<li>Wrote a simple custom middleware to return 404s on anything that wasn&#8217;t being served from /assets</li>
+</ul>
+</div>
+<div class="slide"><h1>Cloudfront middleware code</h1>
+<ul>
+	<li>set the asset host in your environments/<env>.rb file</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">config.action_controller.asset_host = 'subdomain.cloudfront.net'</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+<ul>
+	<li>tell application.rb about your middleware</li>
+</ul>
+<div class="code-normal">
+<pre name="code" class="ruby:nogutter:nocontrols">config.middleware.use "Kaboom::Cloudblock"</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku"></a></div></p>
+</div>
+<div class="slide"><h1>middleware code continued</h1>
+<ul>
+	<li>middleware code</li>
+</ul>
+<div class="code-tiny">
+<pre name="code" class="ruby:nogutter:nocontrols">module Kaboom
+  class Cloudblock
+    def initialize(app)
+      @app = app 
+    end 
+    def call(env)
+      if is_from_cloudfront?(env) &amp;&amp; !env['PATH_INFO'].match(/^\/assets/)
+        [404, {}, ['Not found']]
+      else
+        @app.call(env)
+      end 
+    end 
+    def is_from_cloudfront?(env)
+      env['HTTP_USER_AGENT'] == 'Amazon CloudFront'
+    end
+  end 
+end
+</pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/cloudblock.rb">code/cloudblock.rb</a></div></p></div>
+</div>
+
+<!-- Syntax Highlighter -->
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shCore.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCSharp.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushPhp.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushJScript.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushJava.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushVb.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushSql.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushXml.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushDelphi.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushPython.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushRuby.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCss.js"></script>
+<script class="javascript" src="../assets/dp.SyntaxHighlighter/Scripts/shBrushCpp.js"></script>
+<script language="javascript">
+dp.SyntaxHighlighter.ClipboardSwf = '/flash/clipboard.swf';
+dp.SyntaxHighlighter.HighlightAll('code');
+</script>
+</body>
+</html>

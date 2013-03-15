@@ -1,0 +1,168 @@
+h1. Lessons Learned
+
+h1. ActiveRecord, wtf?
+
+* Schemas are not really supported (we'll get back to this in a minute)
+  - Chicken or the egg problem
+
+* Adapters return different result types unnecessarily
+
+:code code/different_results.rb
+
+h1. What's wrong with this?
+
+:code code/schema_initializer.rb
+
+h1. Managing Web Server rewrites
+
+* Where the hell do you do that?
+* App, unfortunately
+* Reasonable solution: Rack::Rewrite Gem (https://github.com/jtrupiano/rack-rewrite)
+
+:code code/rack_rewrite.rb
+
+h1.  Static websites on Heroku?
+
+* Rack::Static.  Done.
+
+:code code/rack_static.rb
+
+h1. PG_DUMP/Earthdistance, wtf?
+
+* Earthdistance was written to be installed in the public schema
+* Earthdistance was configured to only work if the public schema is in the search path
+* Creating an index on a table using Earthdistance and running pg_dump DOESN'T WORK!!!
+
+:inlinecode
+CREATE INDEX earthdistance_lat_lng_idx ON map.playspaces USING gist(LL_to_earth(lat,lng));
+:endinlinecode
+
+h1. Postgres 9.2, wtf?
+
+* Made a really (stupid) unnecessary breaking change.
+- These work in <= 9.1
+
+:inlinecode
+CREATE LANGUAGE 'PLPGPSQL';
+CREATE LANGUAGE PLPGSQL;
+LANGUAGE 'SQL' IMMUTABLE;
+LANGUAGE SQL STABLE;
+:endinlinecode
+
+- Only these work in >= 9.2
+
+:inlinecode
+CREATE LANGUAGE PLPGSQL;
+LANGUAGE PLPGSQL VOLATILE;
+:endinlinecode
+
+h1. MySQL, wtf?
+
+:inlinecode
+users = User.where('city = "Rockville"')
+:endinlinecode
+
+:inlinecode
+mysql> CREATE TABLE abc (
+        id INTEGER,
+        name VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+ERROR 1293 (HY000): Incorrect table definition; there can be only
+one TIMESTAMP column with CURRENT_TIMESTAMP in
+DEFAULT or ON UPDATE clause
+:endinlinecode
+
+h1. Pretty cool way of ordering with sets
+
+* MySQL has a seemingly useful feature called FIND_IN_SET
+
+:inlinecode
+SELECT * FROM badges ORDER BY FIND_IN_SET(id, '7,2,3');
+:endinlinecode
+
+* Postgres doesn't have this, initially looked at writing a function to replicate, then figured out that this is a totally useless function (at least for this purpose)
+
+:inlinecode
+SELECT * FROM badges ORDER BY id IN (7, 2, 3);
+:endinlinecode
+
+h1. Heroku Postgres, wtf?
+
+* 9.2 is available on Heroku, but only as a devel-upgrade
+* The only way to upgrade an add-on is if it's attached to an app
+* Starting off at the logical postgres.heroku.com to spin up a DB is wrong
+* DB instances spun up through postgres.heroku.com aren't considered apps, therefore not capable of upgrade
+* Using pgbackups also doesn't work as it's looking for an app-specific DATABASE_URL
+* The only way to do this if you have multiple apps is to add the postgres addon to the first app you create on Heroku, then upgrade that, and then use that DATABASE_URL as the DATABASE_URL for every other app.
+
+h1. Heroku SSL, wtf?
+
+* The SSL add-on is $20/month ... per app.
+* I have a wildcard-SSL, Heroku.  What should I do?
+* If you're in the predicament (many apps, one wildcard cert), just get a cheap instance from any provider (Amazon,Linode,Rackspace), set up Nginx with the wildcard cert, and reverse-proxy to Heroku endpoints.  Hell, get two.
+
+h1. Heroku app names, wtf?
+
+* If you plan on creating more than one app on Heroku, for the love of god, please name them something useful
+
+:code code/heroku_apps.sh[class=code-tiny]
+
+h1. Heroku, wtf?
+
+* Not really Heroku, it's a good enforcement
+* Heroku has a soft request time-out at 30 seconds, and hard time-out at 60 seconds
+* Things like multiple attachment uploads need to be re-evaluated.  We're uploading images directly to s3 and using callbacks to process them with Paperclip.
+
+h1.  Heroku scheduler
+
+* Heroku's cron replacement
+* Schedule things every 10 minutes, every hour, or every day
+* So how do you schedule something to run every four hours? (Don't spend 10 minutes on this like I did)
+
+h1. ENV Vars and config files w/ secrets/pw
+
+* Heroku works entirely around Environment variables (not a bad thing)
+* Remember, any file you want to Heroku to know about must be committed to the git repo.
+* The better alternative to this is to use Heroku ENV vars
+
+:inlinecode
+$ heroku config:add RACK_ENV=staging S3_ACCESS_ID=asj9s4b4s8fj
+  S3_SECRET=ainbasf/3ja9sf --remote staging
+:endinlinecode
+
+h1. Pushing non-master branches to Heroku
+
+* Most likely, you're working on a development branch and not merging/pull-requesting it to master. (Please say yes).
+* You'd think this would work if you want to see your changes deployed to Heroku:
+
+:inlinecode
+$ git push heroku development
+:endinlinecode
+
+* By now, you know this doesn't work.  Try this:
+
+:inlinecode
+$ git push heroku development:master
+:endinlinecode
+
+* Nothing happened?  WHY :) ?
+
+h1. Final lessons learned, promise.
+
+* My two favorite Postgres features I've picked up in the last few months: WITH, and LISTEN/NOTIFY
+* WITH allows you to write expressive, chainable SQL
+
+:code code/sql/with.sql[with class=code-tiny]
+
+* RECURSIVE FUN
+
+:code code/sql/with.sql[recursive class=code-tiny]
+
+h1. LISTEN/NOTIFY
+
+* LISTEN/NOTIFY is ASYNC notifier with pub/sub, queue-building capabilities.  The PG gem implements this from libpq.
+
+:code code/listen.rb[class=code-tiny]
+
+:code code/sql/notify.sql[class=code-tiny]
