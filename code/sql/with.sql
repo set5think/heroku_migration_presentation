@@ -4,7 +4,7 @@ WITH hassan_cards AS (
   ARRAY[(SELECT id FROM postrello.members WHERE full_name = 'Hassan Shahid')] <@ member_ids
 ), active_hassan_cards AS (
   SELECT id, member_ids FROM hassan_cards WHERE active IS TRUE
-) SELECT id, member_id FROM active_hassan_cards WHERE
+) SELECT id, member_ids FROM active_hassan_cards WHERE
   NOT ARRAY[(SELECT id FROM postrello.members WHERE full_name = 'Lukas Eklund')] <@ member_ids;
 #END:with
 

@@ -896,7 +896,7 @@ stormy-atoll-5345
   ARRAY[(SELECT id FROM postrello.members WHERE full_name = 'Hassan Shahid')] &lt;@ member_ids
 ), active_hassan_cards AS (
   SELECT id, member_ids FROM hassan_cards WHERE active IS TRUE
-) SELECT id, member_id FROM active_hassan_cards WHERE
+) SELECT id, member_ids FROM active_hassan_cards WHERE
   NOT ARRAY[(SELECT id FROM postrello.members WHERE full_name = 'Lukas Eklund')] &lt;@ member_ids;
 </pre><p></div><div class="codeurl"><a href="txmt://open?url=file:///Users/hassan/git_projects/presentations/kaboom_migration_to_heroku/code/sql/with.sql">code/sql/with.sql</a></div></p>
 <ul>
