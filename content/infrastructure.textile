@@ -12,7 +12,7 @@ h1. Our infrastructure (Pre-migration)
 
 h1. Our infrastructure in imagery (Pre-migration)
 
-* Check out the two images in the /images directory of this presentation
+* Check out the two images in the root directory of this presentation
 * One represents our staging env, and one represents our production env
 
 h1. Our wishlist/goals for a new infrastructure
