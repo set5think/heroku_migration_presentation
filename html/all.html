@@ -821,9 +821,11 @@ DEFAULT or ON UPDATE clause</pre><p></div><div class="codeurl"><a href="txmt://o
 </div>
 <div class="slide"><h1>Heroku <span class="caps">SSL</span>, wtf?</h1>
 <ul>
-	<li>The <span class="caps">SSL</span> add-on is $20/month &#8230; per app.</li>
+	<li>The <span class="caps">SSL</span> add-on is $20/month</li>
 	<li>I have a wildcard-<span class="caps">SSL</span>, Heroku.  What should I do?</li>
-	<li>If you&#8217;re in the predicament (many apps, one wildcard cert), just get a cheap instance from any provider (Amazon,Linode,Rackspace), set up Nginx with the wildcard cert, and reverse-proxy to Heroku endpoints.  Hell, get two.</li>
+	<li>Took a long time to understand through poor support knowledge, but once you understand, it&#8217;s very simple.</li>
+	<li>Once you add the add-on to one of your apps, you receive a an <span class="caps">SSL</span> endpoint, which you need to create a <span class="caps">CNAME</span> record for all your sub-domains to that endpoint.</li>
+	<li>It&#8217;s a little annoying that you place a universally used add-on arbitrarily on one of your apps.  One solution is to create a blank app to just manage addons like this.</li>
 </ul>
 </div>
 <div class="slide"><h1>Heroku app names, wtf?</h1>

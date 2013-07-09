@@ -98,9 +98,11 @@ h1. Heroku Postgres, wtf?
 
 h1. Heroku SSL, wtf?
 
-* The SSL add-on is $20/month ... per app.
+* The SSL add-on is $20/month
 * I have a wildcard-SSL, Heroku.  What should I do?
-* If you're in the predicament (many apps, one wildcard cert), just get a cheap instance from any provider (Amazon,Linode,Rackspace), set up Nginx with the wildcard cert, and reverse-proxy to Heroku endpoints.  Hell, get two.
+* Took a long time to understand through poor support knowledge, but once you understand, it's very simple.
+* Once you add the add-on to one of your apps, you receive a an SSL endpoint, which you need to create a CNAME record for all your sub-domains to that endpoint.
+* It's a little annoying that you place a universally used add-on arbitrarily on one of your apps.  One solution is to create a blank app to just manage addons like this.
 
 h1. Heroku app names, wtf?
 
